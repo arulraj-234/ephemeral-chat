@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ephemeral Chat - Privacy First Chat Rooms</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class = "gradient">
+    <div class="container">
+        <header>
+            <h1> Ephemeral Chat</h1>
+            <p class="subtitle">Privacy-first, temporary chat rooms. No storage, no tracking.</p>
+            <div style="position:absolute; top:1rem; right:1rem;">
+                <button id="themeToggleBtn" class="btn btn-secondary btn-small" aria-label="Toggle theme">🌙</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h2> Privacy First</h2>
+                    <p>Messages are never stored. Once you close the room, everything disappears forever.</p>
+                </div>
+                <div class="feature-card">
+                    <h2> Real-time</h2>
+                    <p>Instant messaging with WebSocket technology. See messages as they're typed.</p>
+                </div>
+                <div class="feature-card">
+                    <h2> Temporary Rooms</h2>
+                    <p>Create rooms on-demand. Share the room ID with friends to start chatting.</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="/create-room" class="btn btn-primary">
+                     Create New Room
+                </a>
+                <a href="/join-room" class="btn btn-secondary">
+                     Join Existing Room
+                </a>
+            </div>
+        </main>
+
+        <footer>
+            <p> No databases, no persistence, no tracking. Pure ephemeral messaging.</p>
+        </footer>
+    </div>
+</body>
+<script src="/js/theme-toggle.js"></script>
+</html>

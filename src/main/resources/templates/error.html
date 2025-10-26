@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Ephemeral Chat</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1> Oops!</h1>
+            <p class="subtitle" th:text="${error}">Something went wrong</p>
+            <div style="position:absolute; top:1rem; right:1rem;">
+                <button id="themeToggleBtn" class="btn btn-secondary btn-small" aria-label="Toggle theme">🌙</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="error-container">
+                <p>The room you're looking for might have been closed or never existed.</p>
+                <p>Remember: All rooms are ephemeral and disappear when inactive.</p>
+            </div>
+
+            <div class="action-buttons">
+                <a href="/create-room" class="btn btn-primary">
+                     Create New Room
+                </a>
+                <a href="/join-room" class="btn btn-secondary">
+                     Try Different Room
+                </a>
+                <a href="/" class="btn btn-secondary">
+                     Go Home
+                </a>
+            </div>
+        </main>
+    </div>
+</body>
+<script src="/js/theme-toggle.js"></script>
+</html>

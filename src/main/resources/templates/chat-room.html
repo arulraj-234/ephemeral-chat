@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${roomInfo.roomName + ' - Ephemeral Chat'}">Chat Room - Ephemeral Chat</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+</head>
+<body class="gradient">
+    <div class="chat-container">
+        <header class="chat-header gradient-header">
+            <div class="room-info">
+                <h1 th:text="${roomInfo.roomName}">Room Name</h1>
+                <p class="room-id">Room ID: <span th:text="${roomId}"></span></p>
+            </div>
+            <div class="room-actions">
+                <button id="shareRoomBtn" class="btn btn-secondary btn-small"> Share</button>
+                <button id="closeRoomBtn" class="btn btn-danger btn-small" 
+                        th:if="${roomInfo.hostUsername == username}"> Close Room</button>
+                <button id="leaveRoomBtn" class="btn btn-danger btn-small"> Leave</button>
+                <!-- Theme toggler -->
+                <button id="themeToggleBtn" class="btn btn-secondary btn-small" aria-label="Toggle theme">🌙</button>
+            </div>
+        </header>
+
+        <div class="chat-layout">
+            <aside class="user-list">
+                <h3> Online Users</h3>
+                <div id="usersList">
+                    <!-- Users will be populated by JavaScript -->
+                </div>
+            </aside>
+
+            <main class="chat-main">
+                <div id="messagesContainer" class="messages-container">
+                    <!-- Messages will be populated by JavaScript -->
+                </div>
+
+                <form id="messageForm" class="message-form">
+                    <input type="text" id="messageInput" placeholder="Type your message..." 
+                           maxlength="500" autocomplete="off">
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </form>
+            </main>
+        </div>
+    </div>
+
+    <!-- Connection status indicator -->
+    <div id="connectionStatus" class="connection-status">
+        <span id="statusText">Connecting...</span>
+    </div>
+
+    <!-- Modals -->
+    <div id="shareModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Share Room</h3>
+            <p>Share this room ID with friends:</p>
+            <div class="share-info">
+                <input type="text" id="shareRoomId" th:value="${roomId}" readonly>
+                <button id="copyShareBtn" class="btn btn-secondary">Copy</button>
+            </div>
+            <button id="closeShareModal" class="btn btn-primary">Close</button>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const roomId = /*[[${roomId}]]*/ '';
+        const username = /*[[${username}]]*/ '';
+        const isHost = /*[[${roomInfo.hostUsername == username}]]*/ false;
+        
+        let websocket;
+        let isConnected = false;
+
+        // Initialize WebSocket connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/chat`;
+            
+            websocket = new WebSocket(wsUrl);
+            
+            websocket.onopen = function() {
+                console.log('WebSocket connected');
+                isConnected = true;
+                updateConnectionStatus('Connected', 'connected');
+                
+                // Join the room
+                sendMessage({
+                    type: 'JOIN',
+                    content: '',
+                    sender: username,
+                    roomId: roomId
+                });
+            };
+
+            websocket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleIncomingMessage(message);
+            };
+
+            websocket.onclose = function() {
+                console.log('WebSocket disconnected');
+                isConnected = false;
+                updateConnectionStatus('Disconnected', 'disconnected');
+                
+                // Try to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            websocket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus('Connection Error', 'error');
+            };
+        }
+
+        function sendMessage(message) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify(message));
+            }
+        }
+
+        function handleIncomingMessage(message) {
+            switch(message.type) {
+                case 'CHAT':
+                    displayChatMessage(message);
+                    break;
+                case 'JOIN':
+                    displaySystemMessage(message.content);
+                    break;
+                case 'LEAVE':
+                    displaySystemMessage(message.content);
+                    break;
+                case 'USER_LIST':
+                    updateUsersList(message.content);
+                    break;
+                case 'ROOM_CLOSED':
+                    displaySystemMessage(message.content);
+                    setTimeout(() => {
+                        alert('Room has been closed by the host');
+                        window.location.href = '/';
+                    }, 2000);
+                    break;
+            }
+        }
+
+        function displayChatMessage(message) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            if (message.sender === username) {
+                messageDiv.classList.add('own-message');
+            }
+
+            const time = new Date().toLocaleTimeString();
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="sender">${escapeHtml(message.sender)}</span>
+                    <span class="time">${time}</span>
+                </div>
+                <div class="message-content">${escapeHtml(message.content)}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function displaySystemMessage(content) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message system-message';
+            messageDiv.innerHTML = `<div class="message-content">${escapeHtml(content)}</div>`;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function updateUsersList(userListString) {
+            const usersList = document.getElementById('usersList');
+            const users = userListString.split(', ').filter(user => user.trim());
+            
+            usersList.innerHTML = '';
+            users.forEach(user => {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'user-item';
+                if (user === username) {
+                    userDiv.classList.add('current-user');
+                }
+                userDiv.innerHTML = `
+                    <span class="user-name">${escapeHtml(user)}</span>
+                    ${user === username ? '<span class="you-label">(You)</span>' : ''}
+                `;
+                usersList.appendChild(userDiv);
+            });
+        }
+
+        function updateConnectionStatus(text, status) {
+            const statusElement = document.getElementById('statusText');
+            const statusContainer = document.getElementById('connectionStatus');
+            
+            statusElement.textContent = text;
+            statusContainer.className = `connection-status ${status}`;
+            
+            if (status === 'connected') {
+                setTimeout(() => {
+                    statusContainer.style.display = 'none';
+                }, 2000);
+            } else {
+                statusContainer.style.display = 'block';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        document.getElementById('messageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const messageInput = document.getElementById('messageInput');
+            const content = messageInput.value.trim();
+            
+            if (content && isConnected) {
+                sendMessage({
+                    type: 'CHAT',
+                    content: content,
+                    sender: username,
+                    roomId: roomId
+                });
+                messageInput.value = '';
+            }
+        });
+
+        document.getElementById('leaveRoomBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to leave the room?')) {
+                sendMessage({
+                    type: 'LEAVE',
+                    content: '',
+                    sender: username,
+                    roomId: roomId
+                });
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            }
+        });
+
+        if (document.getElementById('closeRoomBtn')) {
+            document.getElementById('closeRoomBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to close this room? All users will be disconnected.')) {
+                    sendMessage({
+                        type: 'ROOM_CLOSED',
+                        content: '',
+                        sender: username,
+                        roomId: roomId
+                    });
+                }
+            });
+        }
+
+        document.getElementById('shareRoomBtn').addEventListener('click', function() {
+            document.getElementById('shareModal').classList.remove('hidden');
+        });
+
+        document.getElementById('closeShareModal').addEventListener('click', function() {
+            document.getElementById('shareModal').classList.add('hidden');
+        });
+
+        document.getElementById('copyShareBtn').addEventListener('click', function() {
+            const shareInput = document.getElementById('shareRoomId');
+            shareInput.select();
+            navigator.clipboard.writeText(shareInput.value).then(function() {
+                const btn = document.getElementById('copyShareBtn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('shareModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (websocket) {
+                sendMessage({
+                    type: 'LEAVE',
+                    content: '',
+                    sender: username,
+                    roomId: roomId
+                });
+                websocket.close();
+            }
+        });
+
+        // Initialize connection
+        connectWebSocket();
+    </script>
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</body>
+</html>
