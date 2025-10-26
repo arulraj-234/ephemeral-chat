@@ -20,7 +20,7 @@
                         th:if="${roomInfo.hostUsername == username}"> Close Room</button>
                 <button id="leaveRoomBtn" class="btn btn-danger btn-small"> Leave</button>
                 <!-- Theme toggler -->
-                <button id="themeToggleBtn" class="btn btn-secondary btn-small" aria-label="Toggle theme">🌙</button>
+                <button id="themeToggleBtn" class="btn btn-secondary btn-small theme-toggle-btn" aria-label="Toggle theme" title="Toggle theme"></button>
             </div>
         </header>
 
@@ -39,7 +39,7 @@
 
                 <form id="messageForm" class="message-form">
                     <input type="text" id="messageInput" placeholder="Type your message..." 
-                           maxlength="500" autocomplete="off">
+                           maxlength="500" autocomplete="off" inputmode="text">
                     <button type="submit" class="btn btn-primary">Send</button>
                 </form>
             </main>
