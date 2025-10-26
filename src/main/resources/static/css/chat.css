@@ -10,8 +10,16 @@
     border-radius: 20px;
     box-shadow: 0 20px 25px -5px var(--shadow-light), 0 10px 10px -5px var(--shadow-dark);
     border: 1px solid var(--border-color);
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+scrollbar-width: none; /* Firefox */
+-ms-overflow-style: none; /* IE/Edge */
+
 }
+.chat-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
 
 .chat-header {
     display: flex;
@@ -137,7 +145,15 @@
     margin-bottom: 1rem;
     scroll-behavior: smooth;
     border: 1px solid var(--border-color);
+    overflow-y: auto;
+    scrollbar-width: none;
+-ms-overflow-style: none;
+
 }
+.messages-container::-webkit-scrollbar {
+    display: none;
+}
+
 
 .message {
     margin-bottom: 1rem;
