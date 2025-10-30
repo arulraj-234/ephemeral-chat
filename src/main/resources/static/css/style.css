@@ -597,12 +597,95 @@ footer {
         font-size: 0.9rem;
     }
 }
+/* === Existing code stays unchanged up to here === */
+
 /* Hide scrollbar globally but keep scroll functionality */
 body {
     scrollbar-width: none;       /* Firefox */
     -ms-overflow-style: none;    /* IE and Edge */
 }
-
 body::-webkit-scrollbar {
     display: none;               /* Chrome, Safari, Opera */
+}
+
+/* === Enhanced Mobile Responsiveness Additions === */
+
+/* Ensure safe area handling (for iPhones with notch) */
+@supports(padding: max(0px)) {
+    body {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Additional ultra-small device tuning (≤340px width) */
+@media (max-width: 340px) {
+    .container {
+        padding: 0.4rem;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+        line-height: 1.2;
+    }
+
+    .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-card {
+        padding: 1rem;
+    }
+
+    .form-container {
+        padding: 1rem;
+        width: 98%;
+    }
+
+    .form-group input {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        padding: 12px;
+        font-size: 0.9rem;
+        min-height: 44px; /* Accessibility improvement */
+    }
+
+    .theme-toggle-btn {
+        width: 32px;
+        height: 32px;
+        top: 0.75rem;
+        right: 0.75rem;
+    }
+}
+
+/* Adjustments for landscape mode on phones */
+@media (max-height: 500px) and (orientation: landscape) {
+    .form-container {
+        margin-top: 0.5rem;
+        padding: 1rem;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn {
+        padding: 12px 18px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Slightly larger text scaling for accessibility */
+@media (max-width: 480px) and (min-resolution: 2dppx) {
+    body {
+        font-size: 105%;
+    }
 }

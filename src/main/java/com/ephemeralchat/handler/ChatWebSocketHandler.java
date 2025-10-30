@@ -1,15 +1,21 @@
 package com.ephemeralchat.handler;
 
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.WebSocketMessage;
+import org.springframework.web.socket.WebSocketSession;
+
 import com.ephemeralchat.model.ChatMessage;
 import com.ephemeralchat.model.ChatRoom;
 import com.ephemeralchat.service.ChatRoomService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.*;
-
-import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class ChatWebSocketHandler implements WebSocketHandler {
@@ -21,12 +27,12 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     private final ConcurrentHashMap<String, String> sessionToUsername = new ConcurrentHashMap<>();
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         System.out.println("WebSocket connection established: " + session.getId());
     }
 
     @Override
-    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
+    public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message) throws Exception {
         String payload = message.getPayload().toString();
         ChatMessage chatMessage = objectMapper.readValue(payload, ChatMessage.class);
         
@@ -36,10 +42,10 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 
         switch (chatMessage.getType()) {
             case JOIN:
-                handleJoinRoom(session, chatMessage, sessionId, username, roomId);
+                handleJoinRoom(session, sessionId, username, roomId);
                 break;
             case CHAT:
-                handleChatMessage(session, chatMessage, username, roomId);
+                handleChatMessage(chatMessage, roomId);
                 break;
             case LEAVE:
                 handleLeaveRoom(session, username);
@@ -52,8 +58,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
         }
     }
 
-    private void handleJoinRoom(WebSocketSession session, ChatMessage chatMessage, 
-                               String sessionId, String username, String roomId) throws IOException {
+    private void handleJoinRoom(WebSocketSession session, String sessionId, String username, String roomId) throws IOException {
         if (!chatRoomService.roomExists(roomId)) {
             // Send error message back to user
             ChatMessage errorMessage = new ChatMessage(ChatMessage.MessageType.CHAT, 
@@ -74,8 +79,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
         sendUserListToRoom(roomId);
     }
 
-    private void handleChatMessage(WebSocketSession session, ChatMessage chatMessage, 
-                                  String username, String roomId) throws IOException {
+    private void handleChatMessage(ChatMessage chatMessage, String roomId) throws IOException {
         if (chatRoomService.roomExists(roomId)) {
             broadcastToRoom(roomId, chatMessage);
         }
@@ -132,12 +136,12 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     }
 
     @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+    public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) throws Exception {
         System.err.println("WebSocket transport error: " + exception.getMessage());
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus closeStatus) throws Exception {
         String username = sessionToUsername.get(session.getId());
         if (username != null) {
             handleLeaveRoom(session, username);
