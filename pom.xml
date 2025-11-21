@@ -53,19 +53,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.openrewrite.maven</groupId>
-                <artifactId>rewrite-maven-plugin</artifactId>
-                <version>6.22.1</version>
-                <configuration>
-                    <activeRecipes>
-                        <recipe>io.moderne.java.spring.boot3.UpgradeSpringBoot_3_5</recipe>
-                    </activeRecipes>
-                    <recipeArtifactCoordinates>
-                        <recipeArtifactCoordinate>org.openrewrite.recipe:rewrite-spring:0.13.0</recipeArtifactCoordinate>
-                    </recipeArtifactCoordinates>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
