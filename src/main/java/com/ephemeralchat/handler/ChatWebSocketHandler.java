@@ -32,10 +32,11 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     }
 
     @Override
-    public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message) throws Exception {
+    public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)
+            throws Exception {
         String payload = message.getPayload().toString();
         ChatMessage chatMessage = objectMapper.readValue(payload, ChatMessage.class);
-        
+
         String sessionId = session.getId();
         String username = chatMessage.getSender();
         String roomId = chatMessage.getRoomId();
@@ -58,12 +59,14 @@ public class ChatWebSocketHandler implements WebSocketHandler {
         }
     }
 
-    private void handleJoinRoom(WebSocketSession session, String sessionId, String username, String roomId) throws IOException {
+    private void handleJoinRoom(WebSocketSession session, String sessionId, String username, String roomId)
+            throws IOException {
         if (!chatRoomService.roomExists(roomId)) {
             // Send error message back to user
-            ChatMessage errorMessage = new ChatMessage(ChatMessage.MessageType.CHAT, 
-                "Room not found or inactive", "System", roomId);
-            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(errorMessage)));
+            ChatMessage errorMessage = new ChatMessage(ChatMessage.MessageType.CHAT,
+                    "Room not found or inactive", "System", roomId);
+            session.sendMessage(
+                    new TextMessage(java.util.Objects.requireNonNull(objectMapper.writeValueAsString(errorMessage))));
             return;
         }
 
@@ -71,8 +74,8 @@ public class ChatWebSocketHandler implements WebSocketHandler {
         chatRoomService.addUserToRoom(roomId, username, session);
 
         // Notify room about new user
-        ChatMessage joinMessage = new ChatMessage(ChatMessage.MessageType.JOIN, 
-            username + " joined the room", username, roomId);
+        ChatMessage joinMessage = new ChatMessage(ChatMessage.MessageType.JOIN,
+                username + " joined the room", username, roomId);
         broadcastToRoom(roomId, joinMessage);
 
         // Send updated user list
@@ -92,8 +95,8 @@ public class ChatWebSocketHandler implements WebSocketHandler {
             sessionToUsername.remove(session.getId());
 
             // Notify room about user leaving
-            ChatMessage leaveMessage = new ChatMessage(ChatMessage.MessageType.LEAVE, 
-                username + " left the room", username, roomId);
+            ChatMessage leaveMessage = new ChatMessage(ChatMessage.MessageType.LEAVE,
+                    username + " left the room", username, roomId);
             broadcastToRoom(roomId, leaveMessage);
 
             // Send updated user list
@@ -104,10 +107,10 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     private void handleCloseRoom(String username, String roomId) throws IOException {
         if (chatRoomService.isUserHost(username, roomId)) {
             // Notify all users that room is closing
-            ChatMessage closeMessage = new ChatMessage(ChatMessage.MessageType.ROOM_CLOSED, 
-                "Room has been closed by the host", "System", roomId);
+            ChatMessage closeMessage = new ChatMessage(ChatMessage.MessageType.ROOM_CLOSED,
+                    "Room has been closed by the host", "System", roomId);
             broadcastToRoom(roomId, closeMessage);
-            
+
             // Close the room
             chatRoomService.closeRoom(roomId);
         }
@@ -119,7 +122,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
             String messageJson = objectMapper.writeValueAsString(message);
             for (WebSocketSession session : room.getParticipants().values()) {
                 if (session.isOpen()) {
-                    session.sendMessage(new TextMessage(messageJson));
+                    session.sendMessage(new TextMessage(java.util.Objects.requireNonNull(messageJson)));
                 }
             }
         }
@@ -129,8 +132,8 @@ public class ChatWebSocketHandler implements WebSocketHandler {
         ChatRoom room = chatRoomService.getRoomById(roomId);
         if (room != null) {
             String userList = String.join(", ", room.getParticipantUsernames());
-            ChatMessage userListMessage = new ChatMessage(ChatMessage.MessageType.USER_LIST, 
-                userList, "System", roomId);
+            ChatMessage userListMessage = new ChatMessage(ChatMessage.MessageType.USER_LIST,
+                    userList, "System", roomId);
             broadcastToRoom(roomId, userListMessage);
         }
     }
@@ -141,7 +144,8 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     }
 
     @Override
-    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus closeStatus) throws Exception {
+    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus closeStatus)
+            throws Exception {
         String username = sessionToUsername.get(session.getId());
         if (username != null) {
             handleLeaveRoom(session, username);
