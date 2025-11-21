@@ -5,6 +5,8 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
 COPY frontend/ ./
+RUN ls -la node_modules/.bin
+RUN echo $PATH
 RUN npm run build
 
 # ===== Backend Build Stage =====
