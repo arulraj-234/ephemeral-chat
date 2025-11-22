@@ -5,7 +5,7 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
 COPY frontend/ ./
-RUN npx vite build
+RUN npm run build
 
 # ===== Backend Build Stage =====
 FROM maven:3.9.6-eclipse-temurin-21 AS build
